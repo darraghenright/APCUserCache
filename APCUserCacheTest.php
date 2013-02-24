@@ -20,13 +20,13 @@ class APCUserCacheTest extends \PHPUnit_Framework_TestCase
     public static function setUpBeforeClass()
     {
         if (!extension_loaded('apc')) {
-            throw new \RuntimeException(
+            $this->markTestSkipped(
                 'APC extension is not installed.'
             );
         }
 
         if (1 !== (int) ini_get('apc.enable_cli')) {
-            throw new \RuntimeException(
+            $this->markTestSkipped(
                 'APC extension is not enabled for CLI.'
             );
         }
@@ -48,6 +48,16 @@ class APCUserCacheTest extends \PHPUnit_Framework_TestCase
     public function getIntegerRange()
     {
         return array(range(-1, 120));
+    }
+
+    /**
+     * Float range provider.
+     *
+     * @return array An array of floats from 0.1 - 3.1
+     */
+    public function getFloatRange()
+    {
+        return array(range(0.1, 3.1, 0.2));
     }
 
     /**
@@ -92,19 +102,18 @@ class APCUserCacheTest extends \PHPUnit_Framework_TestCase
     public function testSetDefaultTtlWithStringShouldThrowInvalidArgumentException()
     {
         $this->userCache->setDefaultTtl('foo');
-        $this->userCache->setDefaultTtl(array());
-        $this->userCache->setDefaultTtl(0.1);
     }
 
     /**
      * Setting default ttl with float should throw an Exception.
      *
      * @group               Ttl
+     * @dataProvider        getFloatRange
      * @expectedException   InvalidArgumentException
      */
-    public function testSetDefaultTtlWithFloatShouldThrowInvalidArgumentException()
+    public function testSetDefaultTtlWithFloatShouldThrowInvalidArgumentException($float)
     {
-        $this->userCache->setDefaultTtl(0.1);
+        $this->userCache->setDefaultTtl($float);
     }
 
     /**
@@ -121,11 +130,51 @@ class APCUserCacheTest extends \PHPUnit_Framework_TestCase
     /**
      * Method getKeys() should return an array.
      *
-     * @group               Keys
+     * @group               Data
      */
     public function testGetKeysShouldReturnArray()
     {
         $keys = $this->userCache->getKeys();
         $this->assertTrue(is_array($keys));
+    }
+
+    /**
+     * Method getItems() should return an array.
+     *
+     * @group               Data
+     */
+    public function testGetItemsShouldReturnArray()
+    {
+        $items = $this->userCache->getItems();
+        $this->assertTrue(is_array($items));
+    }
+
+    // test add should write new value
+    // test add should not rewrite existing value
+    // test store should write new value
+    // test store should rewrite existing value
+    // test fetch should return false for non existent key
+    // test fetch should return expected values for existing key
+    // test keys returned
+    // test non string key throws error
+
+    /**
+     * Method `clear()` should clear user cache.
+     *
+     * @group               Data
+     */
+    public function testClearShouldClearUserCache()
+    {
+        $key = (string) time();
+        $val = 1;
+
+        $this->userCache->add($key, $val);
+        $this->assertEquals($this->userCache->fetch($key), $val);
+
+        $this->userCache->clear();
+
+        $keys = $this->userCache->getKeys();
+        $this->assertTrue(empty($keys));
+        $this->assertFalse($this->userCache->fetch($key));
     }
 }

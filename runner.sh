@@ -1,5 +1,7 @@
 #!/bin/bash
 
-phpunit --coverage-html ./report APCUserCacheTest.php
+clear
+
+phpunit --verbose --colors --coverage-html ./report APCUserCacheTest.php
 
 exit $?

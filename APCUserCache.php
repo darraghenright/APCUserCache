@@ -180,4 +180,13 @@ class APCUserCache extends \APCIterator
     {
         apc_delete($key);
     }
+
+    /**
+     * Clear all variables from the cache.
+     * @return boolean
+     */
+    public function clear()
+    {
+        return apc_clear_cache('user');
+    }
 }
