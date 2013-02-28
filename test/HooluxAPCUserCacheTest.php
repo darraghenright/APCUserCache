@@ -1,15 +1,17 @@
 <?php
 
-require_once __DIR__ . '/APCUserCache.php';
+require_once __DIR__ . '/../src/Hoolux/APC/UserCache.php';
+
+use Hoolux\APC\UserCache;
 
 /**
  * APCUserCacheTest
  *
- * Unit tests for APCUserCache.
+ * Unit tests for \APCUserCache.
  *
  * @author Darragh Enright <darragh@hoolux.com>
  */
-class APCUserCacheTest extends \PHPUnit_Framework_TestCase
+class HooluxAPCUserCacheTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * TestCase initialisation tasks:
@@ -33,11 +35,15 @@ class APCUserCacheTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Init instance for tests.
+     * Initialise tests:
+     *
+     * * Create a new APCUserCache instance
+     * * CLear user cache (the old fashioned way)
      */
     public function setUp()
     {
-        $this->userCache = new \APCUserCache();
+        $this->userCache = new UserCache();
+        apc_clear_cache('user');
     }
 
     /**
@@ -65,7 +71,16 @@ class APCUserCacheTest extends \PHPUnit_Framework_TestCase
      */
     public function testObjectShouldBeInstanceOfAPCUserCache()
     {
-        $this->assertInstanceOf('APCUserCache', $this->userCache);
+        $this->assertInstanceOf('Hoolux\\APC\\UserCache', $this->userCache);
+    }
+
+    /**
+     *  Object should extend class \APCIterator
+     */
+    public function testObjectSHouldExtendClassAPCIterator()
+    {
+        $parent = get_parent_class($this->userCache);
+        $this->assertEquals('APCIterator', $parent);
     }
 
     /**
@@ -128,20 +143,71 @@ class APCUserCacheTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Method `add()` should cacheNewValueButNotOverwriteExistingValue description]
+     * @return [type] [description]
+     */
+    public function testAddShouldOnlyWriteNewValueButNotOverwriteExistingValue()
+    {
+        $r1 = $this->userCache->add('key', 1);
+        $this->assertEquals($this->userCache->fetch('key'), 1);
+        $this->assertTrue($r1);
+
+        $r2 = $this->userCache->add('key', 2);
+        $this->assertEquals($this->userCache->fetch('key'), 1);
+        $this->assertFalse($r2);
+    }
+
+    /**
+     * [testStoreShouldWriteNewValueAndOverwriteExistingValue description]
+     */
+    public function testStoreShouldWriteNewValueAndOverwriteExistingValue()
+    {
+        $r1 = $this->userCache->store('key', 1);
+        $this->assertEquals($this->userCache->fetch('key'), 1);
+        $this->assertTrue($r1);
+
+        $r2 = $this->userCache->store('key', 2);
+        $this->assertEquals($this->userCache->fetch('key'), 2);
+        $this->assertTrue($r2);
+    }
+
+    /**
+     * [testFetchShouldReturnFalseForNonExistentKey description]
+     *
+     * @group             Cache
+     */
+    public function testFetchShouldReturnFalseForNonExistentKey()
+    {
+        $this->assertFalse($this->userCache->fetch('key'));
+    }
+
+    /**
+     * [testNonStringKeyThrowsError description]
+     *
+     * $group             Cache
+     * @expectedException \InvalidArgumentException
+     */
+    public function testNonStringKeyThrowsError()
+    {
+        $this->userCache->add(1);
+    }
+
+    /**
      * Method getKeys() should return an array.
      *
-     * @group               Data
+     * @group               Cache
      */
     public function testGetKeysShouldReturnArray()
     {
         $keys = $this->userCache->getKeys();
         $this->assertTrue(is_array($keys));
+        // keys are correct?
     }
 
     /**
-     * Method getItems() should return an array.
+     * Method `getItems()` should return an array.
      *
-     * @group               Data
+     * @group               Cache
      */
     public function testGetItemsShouldReturnArray()
     {
@@ -149,19 +215,10 @@ class APCUserCacheTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue(is_array($items));
     }
 
-    // test add should write new value
-    // test add should not rewrite existing value
-    // test store should write new value
-    // test store should rewrite existing value
-    // test fetch should return false for non existent key
-    // test fetch should return expected values for existing key
-    // test keys returned
-    // test non string key throws error
-
     /**
      * Method `clear()` should clear user cache.
      *
-     * @group               Data
+     * @group               Cache
      */
     public function testClearShouldClearUserCache()
     {

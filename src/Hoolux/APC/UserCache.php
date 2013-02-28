@@ -1,7 +1,12 @@
 <?php
 
+namespace Hoolux\APC;
+
+use APCIterator;
+use Closure;
+
 /**
- * APCUserCache
+ * Hoolux\APC\UserCache
  *
  * A wrapper for APC's user cache
  * implementing a subset of APC
@@ -9,12 +14,12 @@
  *
  * @author  Darragh Enright <darragh@hoolux.com>
  */
-class APCUserCache extends \APCIterator
+class UserCache extends APCIterator
 {
     /**
-     * Time To Live
+     * Time To Live.
      *
-     * Store var in the cache for ttl seconds.
+     * Store a value in the cache for ttl seconds.
      * After the ttl has passed, the stored variable
      * will be expunged from the cache (on the next request).
      * If no ttl is supplied (or if the ttl is 0), the value
@@ -90,6 +95,7 @@ class APCUserCache extends \APCIterator
 
         return $keys;
     }
+
     /**
      * Get all currently stored items.
      *
@@ -106,6 +112,17 @@ class APCUserCache extends \APCIterator
         }
 
         return $items;
+    }
+
+    /**
+     * Get all currently stored items by filter.
+     *
+     * @param  Closure $fn User-defined anonymous function
+     * @return array
+     */
+    public function getItemsByFilter(Closure $fn)
+    {
+        return array_filter($this->getItems(), $fn);
     }
 
     /**
@@ -140,6 +157,12 @@ class APCUserCache extends \APCIterator
      */
     public function add($key, $value = true, $ttl = null)
     {
+        if (!is_string($key)) {
+            throw new \InvalidArgumentException(
+                'The key provided must be a string or array of strings'
+            );
+        }
+
         return apc_add($key, $value, ($ttl ?: $this->ttl));
     }
 
@@ -167,7 +190,9 @@ class APCUserCache extends \APCIterator
      */
     public function fetch($key)
     {
-        //apc_fetch( mixed $key [, bool &$success ] )
+        $result = apc_fetch($key, $success);
+
+        return $result ?: $success;
     }
 
     /**
