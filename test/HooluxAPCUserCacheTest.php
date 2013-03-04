@@ -67,7 +67,7 @@ class HooluxAPCUserCacheTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Object should be instance of APCUserCache.
+     * Object should be instance of \Hoolux\APC\UserCache.
      */
     public function testObjectShouldBeInstanceOfAPCUserCache()
     {
@@ -77,7 +77,7 @@ class HooluxAPCUserCacheTest extends \PHPUnit_Framework_TestCase
     /**
      *  Object should extend class \APCIterator
      */
-    public function testObjectSHouldExtendClassAPCIterator()
+    public function testObjectShouldExtendClassAPCIterator()
     {
         $parent = get_parent_class($this->userCache);
         $this->assertEquals('APCIterator', $parent);
